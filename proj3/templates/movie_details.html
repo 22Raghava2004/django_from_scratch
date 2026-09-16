@@ -1,0 +1,177 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ movie.title }} - CineMax</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:Arial,sans-serif; }
+        body { background:#050505; color:white; }
+
+        .navbar {
+            display:flex;
+            justify-content:space-between;
+            padding:20px 40px;
+            background:rgba(0,0,0,.8);
+        }
+
+        .navbar h1 { color:#00e5ff; }
+        .navbar a { color:#bbb; text-decoration:none; margin-left:20px; }
+
+        .container {
+            max-width:900px;
+            margin:40px auto;
+            padding:0 20px;
+        }
+
+        video {
+            width:100%;
+            border-radius:12px;
+            margin-bottom:20px;
+        }
+
+        h2 { color:#00e5ff; font-size:28px; margin-bottom:10px; }
+        p { color:#bbb; line-height:1.7; margin-bottom:20px; }
+
+        .meta { color:#777; font-size:13px; margin-bottom:20px; }
+
+        .btn-watchlist {
+            padding:12px 25px;
+            border:none;
+            border-radius:8px;
+            background:#00e5ff;
+            color:#000;
+            font-size:15px;
+            cursor:pointer;
+            font-weight:bold;
+            transition:.3s;
+        }
+
+        .btn-watchlist:hover { background:#00b8cc; }
+        .btn-watchlist.added { background:#4CAF50; color:white; }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <h1>🎬 CineMax</h1>
+        <div>
+            <a href="{% url 'home' %}">Home</a>
+            {% if request.user.is_authenticated %}
+                <a href="{% url 'watchlist' %}">Watchlist</a>
+                <a href="{% url 'logout' %}">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- Video Player -->
+        <video controls>
+            <source src="{{ movie.video.url }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+
+        <!-- Movie Info -->
+        <h2>{{ movie.title }}</h2>
+        <p class="meta">
+            Genre: {{ movie.genre }} |
+            Uploaded by: {{ movie.uploaded_by.username }} |
+            {{ movie.uploaded_at|date:"d M Y" }}
+        </p>
+        <p>{{ movie.description }}</p>
+
+        <!-- Watchlist Button -->
+        {% if request.user.is_authenticated %}
+        <button
+            class="btn-watchlist {% if in_watchlist %}added{% endif %}"
+            id="watchlistBtn"
+            data-movie-id="{{ movie.id }}">
+            {% if in_watchlist %}✅ In Watchlist{% else %}+ Add to Watchlist{% endif %}
+        </button>
+        {% endif %}
+
+    </div>
+
+    <script>
+        // ==========================================
+        // SAVE TO RECENTLY VIEWED (localStorage)
+        // ==========================================
+        const movie = {
+            id: {{ movie.id }},
+            title: "{{ movie.title }}",
+            poster: "{% if movie.poster %}{{ movie.poster.url }}{% endif %}",
+            genre: "{{ movie.genre }}"
+        }
+
+        let recent = JSON.parse(localStorage.getItem('recentlyViewed') || '[]')
+
+        // Remove if already exists (avoid duplicates)
+        recent = recent.filter(m => m.id !== movie.id)
+
+        // Add to front
+        recent.unshift(movie)
+
+        // Keep only last 10
+        if (recent.length > 10) recent = recent.slice(0, 10)
+
+        localStorage.setItem('recentlyViewed', JSON.stringify(recent))
+
+        // ==========================================
+        // WATCHLIST BUTTON — JS FETCH
+        // ==========================================
+        const btn = document.getElementById('watchlistBtn')
+
+        if (btn) {
+            btn.addEventListener('click', async () => {
+                const movieId = btn.dataset.movieId
+                const isAdded = btn.classList.contains('added')
+
+                // Decide which URL to call
+                const url = isAdded ? '/watchlist/remove/' : '/watchlist/add/'
+
+                // fetch() sends POST to Django
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ movie_id: movieId })
+                })
+
+                const data = await response.json()
+
+                if (data.success) {
+                    if (isAdded) {
+                        btn.textContent = '+ Add to Watchlist'
+                        btn.classList.remove('added')
+                    } else {
+                        btn.textContent = '✅ In Watchlist'
+                        btn.classList.add('added')
+                    }
+                }
+            })
+        }
+
+        // CSRF helper
+        function getCookie(name) {
+            let cookieValue = null
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';')
+                for (let cookie of cookies) {
+                    cookie = cookie.trim()
+                    if (cookie.startsWith(name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1))
+                        break
+                    }
+                }
+            }
+            return cookieValue
+        }
+    </script>
+
+</body>
+</html>

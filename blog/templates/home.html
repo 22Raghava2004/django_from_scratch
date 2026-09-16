@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f8;
+            margin: 0;
+        }
+
+        .navbar {
+            background: #222;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin-left: 15px;
+        }
+
+        .container {
+            width: 70%;
+            margin: 20px auto;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .card img {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .username {
+            font-weight: bold;
+        }
+
+        .actions a, .actions button {
+            margin-right: 10px;
+            text-decoration: none;
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Navbar -->
+<div class="navbar">
+    <div><strong>MyBlog</strong></div>
+    <div>
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'friends_feed' %}">Friends</a>
+        <a href="{% url 'post_create' %}">Create</a>
+        <span>{{ request.user.username }}</span>
+    </div>
+</div>
+
+<div class="container">
+
+{% for post in posts %}
+<div class="card">
+
+    <p class="username">{{ post.user.username }}</p>
+
+    <h2>{{ post.title }}</h2>
+
+    {% if post.cover_image %}
+        <img src="{{ post.cover_image.url }}">
+    {% endif %}
+
+    <p>{{ post.content|truncatewords:25 }}</p>
+
+    <div class="actions">
+
+        <a href="{% url 'post_detail' post.slug %}">View</a>
+
+        {% if post.user == request.user %}
+            <a href="{% url 'post_edit' post.slug %}">Edit</a>
+
+            <form action="{% url 'post_delete' post.slug %}" method="POST" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit">Delete</button>
+            </form>
+
+        {% else %}
+
+            <!-- 🔥 Dynamic Follow Button -->
+            <a href="#"
+               class="follow-btn"
+               data-username="{{ post.user.username }}"
+               data-following="{% if post.user.id in following_users %}true{% else %}false{% endif %}"
+               style="color:{% if post.user.id in following_users %}red{% else %}green{% endif %};">
+
+               {% if post.user.id in following_users %}
+                   Unfollow
+               {% else %}
+                   Follow
+               {% endif %}
+            </a>
+
+        {% endif %}
+
+    </div>
+
+</div>
+{% endfor %}
+
+</div>
+
+<!-- 🔥 JavaScript for dynamic follow/unfollow -->
+<script>
+document.querySelectorAll('.follow-btn').forEach(button => {
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        let username = this.dataset.username;
+        let isFollowing = this.dataset.following === "true";
+
+        let url = isFollowing 
+            ? `/unfollow/${username}/` 
+            : `/follow/${username}/`;
+
+        fetch(url)
+        .then(response => {
+            if (response.ok) {
+
+                if (isFollowing) {
+                    this.innerText = "Follow";
+                    this.style.color = "green";
+                    this.dataset.following = "false";
+                } else {
+                    this.innerText = "Unfollow";
+                    this.style.color = "red";
+                    this.dataset.following = "true";
+                }
+
+            }
+        });
+    });
+});
+</script>
+
+</body>
+</html>

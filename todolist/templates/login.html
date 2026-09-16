@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <button onclick="showfonct('username')">username</button>
+    <button onclick="showfonct('email')">email</button>
+
+
+    {% if messages %}
+    {% for message in messages %}
+    <p> {{ message }}</p>
+    {% endfor %}
+    {% endif %}
+
+    <div >
+        <h1 id="header1"> login with username</h1>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="text" id="identifier"  name="identifier" placeholder="username">
+            <input type="password" name="password" placeholder="password">
+            <button type="submit">submit</button>
+            
+            
+        </form>
+    </div>
+      
+                <br>
+
+                <p> dont have a foking account <a href="{% url 'sign_pop' %}">sign up</a></p>
+<script>
+    const showfonct = (type) =>{
+       
+    const input = document.getElementById("identifier");
+    const header =document.getElementById("header1");
+
+    if (type === "username") {
+        input.type = "text";
+        input.placeholder = "Username";
+        input.name='identifier'
+        header.innerHTML='login with user'
+    } else {
+        input.type = "email";
+        input.placeholder = "Email";
+        input.name='email'
+        header.innerHTML='login with email'
+
+    }
+};
+    
+</script>
+    
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Friends Feed</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f8;
+            margin: 0;
+        }
+
+        .navbar {
+            background: #222;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin-left: 15px;
+        }
+
+        .container {
+            width: 70%;
+            margin: 20px auto;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .card img {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .username {
+            font-weight: bold;
+        }
+
+        .actions a {
+            margin-right: 10px;
+            text-decoration: none;
+        }
+
+        .empty {
+            text-align: center;
+            margin-top: 50px;
+            color: gray;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Navbar -->
+<div class="navbar">
+    <div><strong>MyBlog</strong></div>
+    <div>
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'friends_feed' %}">Friends</a>
+        <a href="{% url 'post_create' %}">Create</a>
+        <span>{{ request.user.username }}</span>
+    </div>
+</div>
+
+<div class="container">
+
+<h2>Friends Feed</h2>
+
+{% for post in posts %}
+<div class="card">
+
+    <p class="username">{{ post.user.username }}</p>
+
+    <h3>{{ post.title }}</h3>
+
+    {% if post.cover_image %}
+        <img src="{{ post.cover_image.url }}">
+    {% endif %}
+
+    <p>{{ post.content|truncatewords:25 }}</p>
+
+    <div class="actions">
+        <a href="{% url 'post_detail' post.slug %}">View</a>
+
+        <!-- Unfollow button directly -->
+        <a href="{% url 'unfollow_user' post.user.username %}" style="color:red;">
+            Unfollow
+        </a>
+    </div>
+
+</div>
+{% empty %}
+<div class="empty">
+    <p>😅 You are not following anyone yet</p>
+    <p>Go to Home and follow users to see their posts</p>
+</div>
+{% endfor %}
+
+</div>
+
+</body>
+</html>

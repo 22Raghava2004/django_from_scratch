@@ -1,0 +1,205 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>home page</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin: 20px 0 10px 0;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 6px;
+        }
+
+        /* User status bar */
+        .user-bar {
+            background: #2c3e50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        /* Task cards */
+        .task-card {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            margin-bottom: 12px;
+            border-left: 4px solid #ccc;
+        }
+
+        /* My tasks have green border */
+        .my-task-card {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            margin-bottom: 12px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .task-card h3,
+        .my-task-card h3 {
+            color: #2c3e50;
+            margin-bottom: 6px;
+        }
+
+        .task-card p,
+        .my-task-card p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .task-card img,
+        .my-task-card img {
+            border-radius: 6px;
+            margin: 8px 0;
+            display: block;
+        }
+
+        button {
+            padding: 7px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-right: 6px;
+            margin-top: 8px;
+        }
+
+        .btn-delete   { background: #f44336; color: white; }
+        .btn-submit   { background: #4CAF50; color: white; padding: 10px 20px; font-size: 15px; }
+
+        /* Form */
+        .form-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            margin-top: 20px;
+        }
+
+        .form-section input[type="text"],
+        .form-section input[type="file"],
+        .form-section textarea {
+            width: 100%;
+            padding: 9px;
+            margin: 6px 0 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-section textarea {
+            height: 80px;
+            resize: vertical;
+        }
+
+        .empty {
+            color: #999;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <header><button> <a href="{% url 'login' %}">login</a></button>
+    <br>
+<button> <a href="{% url 'sign_pop' %}">signup</a></button>
+</header>
+
+{% if user.is_authenticated %}
+<a href="{% url 'add_task' %}">
+    <button>➕ Add Task</button>
+</a>   
+{% else %}
+<p> login to post</p>
+{% endif %}
+ <h1>home page</h1>
+    <p>this is my page</p>
+
+    <!-- User status -->
+    <div class="user-bar">
+        {% if request.user.is_authenticated %}
+            <p>the user is logged in: {{ request.user.username }}</p>
+        {% else %}
+            <p>welcome guest</p>
+        {% endif %}
+    </div>
+
+<!--- this is my tasks done by me-->
+    {% if request.user.is_authenticated %}
+    <h2>📌 My Tasks</h2>
+    {% for task in tasks %}
+        {% if request.user == task.user %}
+        <div class="my-task-card">
+            <h3>{{ task.title }}</h3>
+            <p>{{ task.description }}</p>
+            {% if task.image %}
+                <img src="{{ task.image.url }}" width="150">
+            {% endif %}
+            <p>{% if task.completed %} {{ task.completed_on }} Done {% else %} pending {% endif %}</p>
+            <p>{{ task.user.username }}</p>
+            <a href="{% url 'complete_task' task.id %}">
+                <button>{% if task.completed %}↩ Undo {% else %} ✅ Done {% endif %}</button>
+            </a>
+            <a href="{% url 'delut_task' task.id %}">
+                <button class="btn-delete">🗑 delete</button>
+            </a>
+        </div>
+        {% endif %}
+    {% empty %}
+        <p class="empty">No tasks yet.</p>
+    {% endfor %}
+    <hr>
+    {% endif %}
+
+    <!-- All Tasks Section -->
+    <h2>🌍 All Tasks</h2>
+    {% for task in tasks %}
+    <div class="task-card">
+        <h3>{{ task.title }}</h3>
+        <p>{{ task.description }}</p>
+        {% if task.image %}
+            <img src="{{ task.image.url }}" width="150">
+        {% endif %}
+        <p>{% if task.completed %} {{ task.completed_on }} Done {% else %} pending {% endif %}</p>
+        <p>{{ task.user.username }}</p>
+        {% if request.user.is_authenticated and request.user == task.user %}
+            <a href="{% url 'delut_task' task.id %}">
+                <button class="btn-delete">🗑 delete</button>
+            </a>
+        {% endif %}
+    </div>
+    {% empty %}
+        <p class="empty">no task done</p>
+    {% endfor %}
+
+    
+<footer>
+    <button> <a href="{% url 'logout' %}">logout</a></button>
+</footer>
+</body>
+</html>

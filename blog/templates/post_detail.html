@@ -1,0 +1,15 @@
+<h1>{{ post.title }}</h1>
+<p>By {{ post.user.username }}</p>
+
+{% if post.cover_image %}
+  <img src="{{ post.cover_image.url }}" width="300">
+{% endif %}
+
+<p>{{ post.content }}</p>
+
+<a href="{% url 'home' %}">Back</a>
+
+{% if post.user != request.user %}
+  <br>
+  <a href="{% url 'follow_user' post.user.username %}">Follow</a>
+{% endif %}
