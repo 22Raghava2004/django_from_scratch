@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book Library</title>
+</head>
+<body>
+    <h1>Welcome to the book library</h1>
+
+    <h2>
+    {% if user.is_authenticated %}
+        Hello, {{ user.username }}!
+    {% endif %}
+
+    <a href="{% url 'post' %}">Post</a>
+</h2>
+    <h1>Book Library</h1>
+
+    <input type="text" id="search" placeholder="Search book">
+
+    <button onclick="searchBooks()">Search</button>
+
+    
+<div>
+    <ul id="book-list"></ul>
+</div>
+    <script>
+        function loadBooks(){
+            fetch('/api/books/')
+            .then(res=>res.json())
+            .then(data=>{
+                const list=document.getElementById('book-list')
+                list.innerHTML=''
+                data.forEach(book=>{
+                    list.innerHTML+=`<li> 
+                        ${book.id} - ${book.title}
+                        </li>`
+                })
+            })
+        }
+        
+        function searchBooks() {
+
+            const query = document.getElementById("search").value;
+
+            fetch(`/api/books/search/?q=${query}`)
+                .then(response => response.json())
+                .then(data => {
+
+                    const list = document.getElementById("book-list");
+
+                    list.innerHTML = "";
+
+                    data.forEach(book => {
+
+                        list.innerHTML += `
+                            <li>
+                                ${book.id} - ${book.title}
+                            </li>
+                        `;
+
+                    });
+
+                });
+        }
+
+        // Load all books when page opens
+        loadBooks()
+    </script>
+
+</body>
+</html>
